@@ -40,10 +40,19 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/dynamic_price/class/price_expression.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/dynamic_price/class/price_parser.class.php';
 
+// Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
+$hookmanager->initHooks(array('product_customer_price_number', 'productpricecard','globalcard'));
+
 if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 	require_once DOL_DOCUMENT_ROOT.'/product/class/productcustomerprice.class.php';
 
 	$prodcustprice = new Productcustomerprice($db);
+
+	$hookMethod = 'productCustomerPriceNumberHook';
+	$parameters = array('db' => $db);
+	$hookAction = 'extend';
+	$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $prodcustprice, $hookAction);    // Note that $action and $object may have been modified by some hooks
+	unset($hookMethod, $parameters, $hookAction);
 }
 
 // Load translation files required by the page
@@ -73,9 +82,6 @@ if ($id > 0 || !empty($ref))
 
 // Clean param
 if ((!empty($conf->global->PRODUIT_MULTIPRICES) || !empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) && empty($conf->global->PRODUIT_MULTIPRICES_LIMIT)) $conf->global->PRODUIT_MULTIPRICES_LIMIT = 5;
-
-// Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
-$hookmanager->initHooks(array('productpricecard', 'globalcard'));
 
 
 /*
@@ -501,6 +507,12 @@ if (empty($reshook))
 		$prodcustprice->price_min = price2num(GETPOST("price_min"), 'MU');
 		$prodcustprice->price_base_type = GETPOST("price_base_type", 'alpha');
 
+		$hookMethod = 'productCustomerPriceNumberHook';
+		$parameters = array('ref_product_customer_price_number' => GETPOST("ref_product_customer_price_number"));
+		$hookAction = 'addConfirm';
+		$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $prodcustprice, $hookAction);    // Note that $action and $object may have been modified by some hooks
+		unset($hookMethod, $parameters, $hookAction);
+
 		$tva_tx_txt = GETPOST("tva_tx", 'alpha');
 
 		$tva_tx = $tva_tx_txt;
@@ -600,6 +612,12 @@ if (empty($reshook))
 		$prodcustprice->price = price2num(GETPOST("price"), 'MU');
 		$prodcustprice->price_min = price2num(GETPOST("price_min"), 'MU');
 		$prodcustprice->price_base_type = GETPOST("price_base_type", 'alpha');
+
+		$hookMethod = 'productCustomerPriceNumberHook';
+		$parameters = array('ref_product_customer_price_number' => GETPOST("ref_product_customer_price_number"));
+		$hookAction = 'editConfirm';
+		$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $prodcustprice, $hookAction);    // Note that $action and $object may have been modified by some hooks
+		unset($hookMethod, $parameters, $hookAction);
 
 		$tva_tx_txt = GETPOST("tva_tx");
 
@@ -1626,6 +1644,12 @@ if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 {
 	$prodcustprice = new Productcustomerprice($db);
 
+	$hookMethod = 'productCustomerPriceNumberHook';
+	$parameters = array('db' => $db);
+	$hookAction = 'extend';
+	$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $prodcustprice, $hookAction);    // Note that $action and $object may have been modified by some hooks
+	unset($hookMethod, $parameters, $hookAction);
+
 	$sortfield = GETPOST("sortfield", 'alpha');
 	$sortorder = GETPOST("sortorder", 'alpha');
 	$page = (GETPOST("page", 'int') ?GETPOST("page", 'int') : 0);
@@ -1738,6 +1762,12 @@ if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		dol_fiche_head();
 
 		print '<table class="border" width="100%">';
+
+		$hookMethod = 'productCustomerPriceNumberHook';
+		$parameters = array('label' => $object->label);
+		$hookAction = 'add';
+		$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $lines, $hookAction);    // Note that $action and $object may have been modified by some hooks
+		unset($hookMethod, $parameters, $hookAction);
 
 		foreach ($lines as $line) {
 			foreach ($line as $field) {
@@ -1869,6 +1899,12 @@ if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		dol_fiche_head();
 
 		print '<table class="border centpercent">';
+
+		$hookMethod = 'productCustomerPriceNumberHook';
+		$parameters = array('ref_product_customer_price_number' => $prodcustprice->ref_product_customer_price_number);
+		$hookAction = 'edit';
+		$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $lines, $hookAction);    // Note that $action and $object may have been modified by some hooks
+		unset($hookMethod, $parameters, $hookAction);
 
 		foreach ($lines as $line) {
 			foreach ($line as $field) {
@@ -2244,6 +2280,13 @@ if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 				$table_fields['product_lines'][] = $product_line;
 			}
 		}
+
+		// hook table fields
+		$hookMethod = 'productCustomerPriceNumberHook';
+		$parameters = array('lines' => $prodcustprice->lines);
+		$hookAction = 'list';
+		$reshook=$hookmanager->executeHooks($hookMethod, $parameters, $table_fields, $hookAction);    // Note that $action and $object may have been modified by some hooks
+		unset($hookMethod, $parameters, $hookAction);
 
 		if (count($prodcustprice->lines) > 0 || $search_soc)
 		{
